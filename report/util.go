@@ -22,7 +22,11 @@ import (
 	"golang.org/x/xerrors"
 )
 
-const maxColWidth = 100
+const (
+	vulsOpenTag  = "<vulsreport>"
+	vulsCloseTag = "</vulsreport>"
+	maxColWidth  = 100
+)
 
 func formatScanSummary(rs ...models.ScanResult) string {
 	table := uitable.New()
@@ -136,7 +140,7 @@ No CVE-IDs are found in updatable packages.
 		if strings.HasPrefix(vinfo.CveID, "CVE-") {
 			link = fmt.Sprintf("https://nvd.nist.gov/vuln/detail/%s", vinfo.CveID)
 		} else if strings.HasPrefix(vinfo.CveID, "WPVDBID-") {
-			link = fmt.Sprintf("https://wpvulndb.com/vulnerabilities/%s", strings.TrimPrefix(vinfo.CveID, "WPVDBID-"))
+			link = fmt.Sprintf("https://wpscan.com/vulnerabilities/%s", strings.TrimPrefix(vinfo.CveID, "WPVDBID-"))
 		}
 
 		data = append(data, []string{
@@ -262,17 +266,17 @@ No CVE-IDs are found in updatable packages.
 
 				if len(pack.AffectedProcs) != 0 {
 					for _, p := range pack.AffectedProcs {
-						if len(p.ListenPorts) == 0 {
+						if len(p.ListenPortStats) == 0 {
 							data = append(data, []string{"",
 								fmt.Sprintf("  - PID: %s %s, Port: []", p.PID, p.Name)})
 						}
 
 						var ports []string
-						for _, pp := range p.ListenPorts {
-							if len(pp.PortScanSuccessOn) == 0 {
-								ports = append(ports, fmt.Sprintf("%s:%s", pp.Address, pp.Port))
+						for _, pp := range p.ListenPortStats {
+							if len(pp.PortReachableTo) == 0 {
+								ports = append(ports, fmt.Sprintf("%s:%s", pp.BindAddress, pp.Port))
 							} else {
-								ports = append(ports, fmt.Sprintf("%s:%s(◉ Scannable: %s)", pp.Address, pp.Port, pp.PortScanSuccessOn))
+								ports = append(ports, fmt.Sprintf("%s:%s(◉ Scannable: %s)", pp.BindAddress, pp.Port, pp.PortReachableTo))
 							}
 						}
 
@@ -397,7 +401,7 @@ func formatCsvList(r models.ScanResult, path string) error {
 		if strings.HasPrefix(vinfo.CveID, "CVE-") {
 			link = fmt.Sprintf("https://nvd.nist.gov/vuln/detail/%s", vinfo.CveID)
 		} else if strings.HasPrefix(vinfo.CveID, "WPVDBID-") {
-			link = fmt.Sprintf("https://wpvulndb.com/vulnerabilities/%s", strings.TrimPrefix(vinfo.CveID, "WPVDBID-"))
+			link = fmt.Sprintf("https://wpscan.com/vulnerabilities/%s", strings.TrimPrefix(vinfo.CveID, "WPVDBID-"))
 		}
 
 		data = append(data, []string{
@@ -442,14 +446,23 @@ func formatChangelogs(r models.ScanResult) string {
 	}
 	return strings.Join(buf, "\n")
 }
-func useScannedCves(r *models.ScanResult) bool {
+
+func reuseScannedCves(r *models.ScanResult) bool {
 	switch r.Family {
 	case
 		config.FreeBSD,
 		config.Raspbian:
 		return true
 	}
+	if isTrivyResult(r) {
+		return true
+	}
 	return false
+}
+
+func isTrivyResult(r *models.ScanResult) bool {
+	_, ok := r.Optional["trivy-target"]
+	return ok
 }
 
 func needToRefreshCve(r models.ScanResult) bool {
@@ -555,7 +568,7 @@ func getDiffCves(previous, current models.ScanResult) models.VulnInfos {
 
 				// TODO commented out because  a bug of diff logic when multiple oval defs found for a certain CVE-ID and same updated_at
 				// if these OVAL defs have different affected packages, this logic detects as updated.
-				// This logic will be uncomented after integration with ghost https://github.com/knqyf263/gost
+				// This logic will be uncomented after integration with gost https://github.com/knqyf263/gost
 				// } else if isCveFixed(v, previous) {
 				// updated[v.CveID] = v
 				// util.Log.Debugf("fixed: %s", v.CveID)

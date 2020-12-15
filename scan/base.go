@@ -598,14 +598,26 @@ func (l *base) scanLibraries() (err error) {
 	return nil
 }
 
+// DummyFileInfo is a dummy struct for libscan
 type DummyFileInfo struct{}
 
-func (d *DummyFileInfo) Name() string       { return "dummy" }
-func (d *DummyFileInfo) Size() int64        { return 0 }
-func (d *DummyFileInfo) Mode() os.FileMode  { return 0 }
+// Name is
+func (d *DummyFileInfo) Name() string { return "dummy" }
+
+// Size is
+func (d *DummyFileInfo) Size() int64 { return 0 }
+
+// Mode is
+func (d *DummyFileInfo) Mode() os.FileMode { return 0 }
+
+//ModTime is
 func (d *DummyFileInfo) ModTime() time.Time { return time.Now() }
-func (d *DummyFileInfo) IsDir() bool        { return false }
-func (d *DummyFileInfo) Sys() interface{}   { return nil }
+
+// IsDir is
+func (d *DummyFileInfo) IsDir() bool { return false }
+
+//Sys is
+func (d *DummyFileInfo) Sys() interface{} { return nil }
 
 func (l *base) scanWordPress() (err error) {
 	wpOpts := []string{l.ServerInfo.WordPress.OSUser,
@@ -748,11 +760,11 @@ func (l *base) detectScanDest() map[string][]string {
 			continue
 		}
 		for _, proc := range p.AffectedProcs {
-			if proc.ListenPorts == nil {
+			if proc.ListenPortStats == nil {
 				continue
 			}
-			for _, port := range proc.ListenPorts {
-				scanIPPortsMap[port.Address] = append(scanIPPortsMap[port.Address], port.Port)
+			for _, port := range proc.ListenPortStats {
+				scanIPPortsMap[port.BindAddress] = append(scanIPPortsMap[port.BindAddress], port.Port)
 			}
 		}
 	}
@@ -809,27 +821,31 @@ func (l *base) updatePortStatus(listenIPPorts []string) {
 			continue
 		}
 		for i, proc := range p.AffectedProcs {
-			if proc.ListenPorts == nil {
+			if proc.ListenPortStats == nil {
 				continue
 			}
-			for j, port := range proc.ListenPorts {
-				l.osPackages.Packages[name].AffectedProcs[i].ListenPorts[j].PortScanSuccessOn = l.findPortScanSuccessOn(listenIPPorts, port)
+			for j, port := range proc.ListenPortStats {
+				l.osPackages.Packages[name].AffectedProcs[i].ListenPortStats[j].PortReachableTo = l.findPortTestSuccessOn(listenIPPorts, port)
 			}
 		}
 	}
 }
 
-func (l *base) findPortScanSuccessOn(listenIPPorts []string, searchListenPort models.ListenPort) []string {
+func (l *base) findPortTestSuccessOn(listenIPPorts []string, searchListenPort models.PortStat) []string {
 	addrs := []string{}
 
 	for _, ipPort := range listenIPPorts {
-		ipPort := l.parseListenPorts(ipPort)
-		if searchListenPort.Address == "*" {
+		ipPort, err := models.NewPortStat(ipPort)
+		if err != nil {
+			util.Log.Warnf("Failed to find: %+v", err)
+			continue
+		}
+		if searchListenPort.BindAddress == "*" {
 			if searchListenPort.Port == ipPort.Port {
-				addrs = append(addrs, ipPort.Address)
+				addrs = append(addrs, ipPort.BindAddress)
 			}
-		} else if searchListenPort.Address == ipPort.Address && searchListenPort.Port == ipPort.Port {
-			addrs = append(addrs, ipPort.Address)
+		} else if searchListenPort.BindAddress == ipPort.BindAddress && searchListenPort.Port == ipPort.Port {
+			addrs = append(addrs, ipPort.BindAddress)
 		}
 	}
 
@@ -915,12 +931,4 @@ func (l *base) parseLsOf(stdout string) map[string][]string {
 		portPids[ipPort] = util.AppendIfMissing(portPids[ipPort], pid)
 	}
 	return portPids
-}
-
-func (l *base) parseListenPorts(port string) models.ListenPort {
-	sep := strings.LastIndex(port, ":")
-	if sep == -1 {
-		return models.ListenPort{}
-	}
-	return models.ListenPort{Address: port[:sep], Port: port[sep+1:]}
 }

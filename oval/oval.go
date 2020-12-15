@@ -1,3 +1,5 @@
+// +build !scanner
+
 package oval
 
 import (
@@ -65,7 +67,7 @@ func (b Base) CheckIfOvalFetched(driver db.DB, osFamily, release string) (fetche
 	}
 	count := 0
 	if err := json.Unmarshal([]byte(body), &count); err != nil {
-		return false, xerrors.Errorf("Failed to Unmarshall. body: %s, err: %w", body, err)
+		return false, xerrors.Errorf("Failed to Unmarshal. body: %s, err: %w", body, err)
 	}
 	return 0 < count, nil
 }
@@ -83,7 +85,7 @@ func (b Base) CheckIfOvalFresh(driver db.DB, osFamily, release string) (ok bool,
 		}
 
 		if err := json.Unmarshal([]byte(body), &lastModified); err != nil {
-			return false, xerrors.Errorf("Failed to Unmarshall. body: %s, err: %w", body, err)
+			return false, xerrors.Errorf("Failed to Unmarshal. body: %s, err: %w", body, err)
 		}
 	}
 
