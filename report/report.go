@@ -81,23 +81,23 @@ func FillCveInfos(dbclient DBClient, rs []models.ScanResult, dir string) ([]mode
 		if err := DetectPkgCves(dbclient, &r); err != nil {
 			return nil, xerrors.Errorf("Failed to detect Pkg CVE: %w", err)
 		}
+		/*
+			if err := DetectCpeURIsCves(dbclient.CveDB, &r, cpeURIs); err != nil {
+				return nil, xerrors.Errorf("Failed to detect CVE of `%s`: %w", cpeURIs, err)
+			}
 
-		if err := DetectCpeURIsCves(dbclient.CveDB, &r, cpeURIs); err != nil {
-			return nil, xerrors.Errorf("Failed to detect CVE of `%s`: %w", cpeURIs, err)
-		}
+			if err := DetectGitHubCves(&r); err != nil {
+				return nil, xerrors.Errorf("Failed to detect GitHub Cves: %w", err)
+			}
 
-		if err := DetectGitHubCves(&r); err != nil {
-			return nil, xerrors.Errorf("Failed to detect GitHub Cves: %w", err)
-		}
+			if err := DetectWordPressCves(&r); err != nil {
+				return nil, xerrors.Errorf("Failed to detect WordPress Cves: %w", err)
+			}
 
-		if err := DetectWordPressCves(&r); err != nil {
-			return nil, xerrors.Errorf("Failed to detect WordPress Cves: %w", err)
-		}
-
-		if err := FillCveInfo(dbclient, &r); err != nil {
-			return nil, err
-		}
-
+			if err := FillCveInfo(dbclient, &r); err != nil {
+				return nil, err
+			}
+		*/
 		r.ReportedBy, _ = os.Hostname()
 		r.Lang = c.Conf.Lang
 		r.ReportedAt = reportedAt
@@ -244,37 +244,37 @@ func DetectWordPressCves(r *models.ScanResult) error {
 
 // FillCveInfo fill scanResult with cve info.
 func FillCveInfo(dbclient DBClient, r *models.ScanResult) error {
+	/*
+		// Fill CVE information
+		util.Log.Infof("Fill CVE detailed with gost")
+		if err := gost.NewClient(r.Family).FillCVEsWithRedHat(dbclient.GostDB, r); err != nil {
+			return xerrors.Errorf("Failed to fill with gost: %w", err)
+		}
 
-	// Fill CVE information
-	util.Log.Infof("Fill CVE detailed with gost")
-	if err := gost.NewClient(r.Family).FillCVEsWithRedHat(dbclient.GostDB, r); err != nil {
-		return xerrors.Errorf("Failed to fill with gost: %w", err)
-	}
+		util.Log.Infof("Fill CVE detailed with CVE-DB")
+		if err := fillCvesWithNvdJvn(dbclient.CveDB, r); err != nil {
+			return xerrors.Errorf("Failed to fill with CVE: %w", err)
+		}
 
-	util.Log.Infof("Fill CVE detailed with CVE-DB")
-	if err := fillCvesWithNvdJvn(dbclient.CveDB, r); err != nil {
-		return xerrors.Errorf("Failed to fill with CVE: %w", err)
-	}
+		util.Log.Infof("Fill exploit with Exploit-DB")
+		nExploitCve, err := fillWithExploitDB(dbclient.ExploitDB, r)
+		if err != nil {
+			return xerrors.Errorf("Failed to fill with exploit: %w", err)
+		}
+		util.Log.Infof("%s: %d exploits are detected",
+			r.FormatServerName(), nExploitCve)
 
-	util.Log.Infof("Fill exploit with Exploit-DB")
-	nExploitCve, err := fillWithExploitDB(dbclient.ExploitDB, r)
-	if err != nil {
-		return xerrors.Errorf("Failed to fill with exploit: %w", err)
-	}
-	util.Log.Infof("%s: %d exploits are detected",
-		r.FormatServerName(), nExploitCve)
+		util.Log.Infof("Fill metasploit module with Metasploit-DB")
+		nMetasploitCve, err := fillWithMetasploit(dbclient.MetasploitDB, r)
+		if err != nil {
+			return xerrors.Errorf("Failed to fill with metasploit: %w", err)
+		}
+		util.Log.Infof("%s: %d modules are detected",
+			r.FormatServerName(), nMetasploitCve)
 
-	util.Log.Infof("Fill metasploit module with Metasploit-DB")
-	nMetasploitCve, err := fillWithMetasploit(dbclient.MetasploitDB, r)
-	if err != nil {
-		return xerrors.Errorf("Failed to fill with metasploit: %w", err)
-	}
-	util.Log.Infof("%s: %d modules are detected",
-		r.FormatServerName(), nMetasploitCve)
-
-	util.Log.Infof("Fill CWE with NVD")
-	fillCweDict(r)
-
+		util.Log.Infof("Fill CWE with NVD")
+		fillCweDict(r)
+	*/
 	return nil
 }
 
