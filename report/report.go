@@ -179,51 +179,50 @@ func FillCveInfo(dbclient DBClient, r *models.ScanResult, cpeURIs []string, igno
 			}
 		}
 	}
-	/*
-		nCVEs, err = DetectCpeURIsCves(dbclient.CveDB, r, cpeURIs)
-		if err != nil {
-			return xerrors.Errorf("Failed to detect vulns of `%s`: %w", cpeURIs, err)
-		}
-		util.Log.Infof("%s: %d CVEs are detected with CPE", r.FormatServerName(), nCVEs)
 
-		ints := &integrationResults{}
-		for _, o := range integrations {
-			if err = o.apply(r, ints); err != nil {
-				return xerrors.Errorf("Failed to fill with integration: %w", err)
-			}
-		}
-		util.Log.Infof("%s: %d CVEs are detected with GitHub Security Alerts", r.FormatServerName(), ints.GithubAlertsCveCounts)
+	nCVEs, err = DetectCpeURIsCves(dbclient.CveDB, r, cpeURIs)
+	if err != nil {
+		return xerrors.Errorf("Failed to detect vulns of `%s`: %w", cpeURIs, err)
+	}
+	util.Log.Infof("%s: %d CVEs are detected with CPE", r.FormatServerName(), nCVEs)
 
-		nCVEs, err = DetectPkgsCvesWithGost(dbclient.GostDB, r, ignoreWillNotFix)
-		if err != nil {
-			return xerrors.Errorf("Failed to fill with gost: %w", err)
+	ints := &integrationResults{}
+	for _, o := range integrations {
+		if err = o.apply(r, ints); err != nil {
+			return xerrors.Errorf("Failed to fill with integration: %w", err)
 		}
-		util.Log.Infof("%s: %d unfixed CVEs are detected with gost",
-			r.FormatServerName(), nCVEs)
+	}
+	util.Log.Infof("%s: %d CVEs are detected with GitHub Security Alerts", r.FormatServerName(), ints.GithubAlertsCveCounts)
 
-		util.Log.Infof("Fill CVE detailed information with CVE-DB")
-		if err := fillCvesWithNvdJvn(dbclient.CveDB, r); err != nil {
-			return xerrors.Errorf("Failed to fill with CVE: %w", err)
-		}
+	nCVEs, err = DetectPkgsCvesWithGost(dbclient.GostDB, r, ignoreWillNotFix)
+	if err != nil {
+		return xerrors.Errorf("Failed to fill with gost: %w", err)
+	}
+	util.Log.Infof("%s: %d unfixed CVEs are detected with gost",
+		r.FormatServerName(), nCVEs)
 
-		util.Log.Infof("Fill exploit information with Exploit-DB")
-		nExploitCve, err := FillWithExploitDB(dbclient.ExploitDB, r)
-		if err != nil {
-			return xerrors.Errorf("Failed to fill with exploit: %w", err)
-		}
-		util.Log.Infof("%s: %d exploits are detected",
-			r.FormatServerName(), nExploitCve)
+	util.Log.Infof("Fill CVE detailed information with CVE-DB")
+	if err := fillCvesWithNvdJvn(dbclient.CveDB, r); err != nil {
+		return xerrors.Errorf("Failed to fill with CVE: %w", err)
+	}
 
-		util.Log.Infof("Fill metasploit module information with Metasploit-DB")
-		nMetasploitCve, err := FillWithMetasploit(dbclient.MetasploitDB, r)
-		if err != nil {
-			return xerrors.Errorf("Failed to fill with metasploit: %w", err)
-		}
-		util.Log.Infof("%s: %d modules are detected",
-			r.FormatServerName(), nMetasploitCve)
+	util.Log.Infof("Fill exploit information with Exploit-DB")
+	nExploitCve, err := FillWithExploitDB(dbclient.ExploitDB, r)
+	if err != nil {
+		return xerrors.Errorf("Failed to fill with exploit: %w", err)
+	}
+	util.Log.Infof("%s: %d exploits are detected",
+		r.FormatServerName(), nExploitCve)
 
-		fillCweDict(r)
-	*/
+	util.Log.Infof("Fill metasploit module information with Metasploit-DB")
+	nMetasploitCve, err := FillWithMetasploit(dbclient.MetasploitDB, r)
+	if err != nil {
+		return xerrors.Errorf("Failed to fill with metasploit: %w", err)
+	}
+	util.Log.Infof("%s: %d modules are detected",
+		r.FormatServerName(), nMetasploitCve)
+
+	fillCweDict(r)
 	return nil
 }
 
